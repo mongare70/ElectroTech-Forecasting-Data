@@ -1,0 +1,10 @@
+python-dotenv
+requests
+pandas
+matplotlib
+seaborn
+mlflow
+scikit-learn
+streamlit
+huggingface-hub
+pydantic
