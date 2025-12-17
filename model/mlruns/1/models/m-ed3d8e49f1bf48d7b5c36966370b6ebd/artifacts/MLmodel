@@ -1,0 +1,20 @@
+artifact_path: file:c:/Users/psxea2/Desktop/Amdari files/ElectroTech-Forecasting-Data/model/mlruns/1/models/m-ed3d8e49f1bf48d7b5c36966370b6ebd/artifacts
+flavors:
+  python_function:
+    data: model.statsmodels
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.statsmodels
+    python_version: 3.13.7
+  statsmodels:
+    code: null
+    data: model.statsmodels
+    statsmodels_version: 0.14.6
+mlflow_version: 3.7.0
+model_id: m-ed3d8e49f1bf48d7b5c36966370b6ebd
+model_size_bytes: 12370890
+model_uuid: m-ed3d8e49f1bf48d7b5c36966370b6ebd
+prompts: null
+run_id: 818701d725f24a089f0b9507366cbc1e
+utc_time_created: '2025-12-17 19:59:19.534709'
