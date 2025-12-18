@@ -1,3 +1,6 @@
 .env
 *.csv
-venv
+.venv
+mlruns/
+mlartifacts/
+mlflow.db
