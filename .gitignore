@@ -4,3 +4,4 @@
 mlruns/
 mlartifacts/
 mlflow.db
+model/mlflow.db
