@@ -8,3 +8,6 @@ scikit-learn
 streamlit
 huggingface-hub
 pydantic
+ipykernel
+pmdarima
+statsmodels
