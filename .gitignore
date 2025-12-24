@@ -3,3 +3,4 @@
 venv
 mlruns
 *.pkl
+**/__pycache__/
