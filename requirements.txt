@@ -9,3 +9,5 @@ streamlit
 huggingface-hub
 pydantic
 statsmodels
+pmdarima
+plotly
