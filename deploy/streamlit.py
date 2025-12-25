@@ -40,7 +40,7 @@ st.sidebar.caption("ElectroTech Analytics © 2025")
 
 st.title("💻 ElectroTech Sales Volume Forecast")
 st.markdown(
-    "Predict sales volume using operational context, categoty or season features."
+    "Predict sales volume using operational context, category or season features."
 )
 
 # Create tabs for Monthly, Quarterly, and Weekly lags
@@ -282,7 +282,6 @@ if submitted_monthly:
     # Monthly lag processing
     lag_type = "M"
     lag_suffix = "lag30"
-    time_label = "last_month"
 
     payload = {
         "steps": int(steps),
@@ -297,7 +296,7 @@ if submitted_monthly:
             f"Market_Trend_Index_{lag_suffix}": market_trend_index_monthly,
             f"Price_{lag_suffix}": price_monthly,
             "Market_Trend_Index": market_trend_index_monthly_actual,
-            "Competitor_Activity_Score": market_trend_index_monthly_actual,
+            "Competitor_Activity_Score": competitor_activity_score_monthly_actual,
             "Consumer_Confidence_Index": consumer_confidence_index_monthly_actual,
             "Price": price_monthly_actual
         },
@@ -307,7 +306,6 @@ elif submitted_quarterly:
     # Quarterly lag processing
     lag_type = "Q"
     lag_suffix = "lag30"
-    time_label = "last_month"
 
     payload = {
         "steps": int(steps),
@@ -322,7 +320,7 @@ elif submitted_quarterly:
             f"Market_Trend_Index_{lag_suffix}": market_trend_index_quarterly,
             f"Price_{lag_suffix}": price_quarterly,
             "Market_Trend_Index": market_trend_index_quarterly_actual,
-            "Competitor_Activity_Score": market_trend_index_quarterly_actual,
+            "Competitor_Activity_Score": competitor_activity_score_quarterly_actual,
             "Consumer_Confidence_Index": consumer_confidence_index_quarterly_actual,
             "Price": price_quarterly_actual
         },
@@ -332,7 +330,6 @@ elif submitted_annually:
     # Annual lag processing
     lag_type = "Y"
     lag_suffix = "lag30"
-    time_label = "last_month"
 
     payload = {
         "steps": int(steps),
@@ -347,14 +344,14 @@ elif submitted_annually:
             f"Market_Trend_Index_{lag_suffix}": market_trend_index_annually,
             f"Price_{lag_suffix}": price_annually,
             "Market_Trend_Index": market_trend_index_annually_actual,
-            "Competitor_Activity_Score": market_trend_index_annually_actual,
+            "Competitor_Activity_Score": competitor_activity_score_annually_actual,
             "Consumer_Confidence_Index": consumer_confidence_index_annually_actual,
             "Price": price_annually_actual
         },
     }
 
 
-if submitted_monthly or submitted_quarterly or season_annually:
+if submitted_monthly or submitted_quarterly or submitted_annually:
 
     with st.spinner("Generating forecast…"):
         try:
