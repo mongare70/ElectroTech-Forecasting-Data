@@ -11,3 +11,4 @@ pydantic
 statsmodels
 ipykernel
 pmdarima
+plotly
