@@ -13,13 +13,13 @@ myenv/
 
 # Data files
 *.csv
+venv
+mlruns
 *.pkl
-
-# Python cache
 **/__pycache__/
 
-# MLflow
-mlruns/
+
+# ML flow
 mlartifacts/
+mlruns/
 mlflow.db
-model/mlflow.db

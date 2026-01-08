@@ -182,7 +182,7 @@ if submitted_monthly or submitted_quarterly or submitted_annually:
         freq = "Y"
 
     with st.spinner("Generating forecast…"):
-        response = requests.post(f"{API_URL}/predict", json=payload)
+        response = requests.post(f"{API_URL}predict", json=payload)
 
         if response.status_code != 200:
             st.error(response.text)

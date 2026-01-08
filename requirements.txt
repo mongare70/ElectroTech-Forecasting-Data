@@ -11,6 +11,5 @@ streamlit
 huggingface-hub
 pydantic
 statsmodels
-ipykernel
 pmdarima
 plotly
