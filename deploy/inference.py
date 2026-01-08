@@ -270,4 +270,10 @@ def predict(request: PredictRequest):
 
 if __name__ == "__main__":
     import uvicorn
+
+    print("\nFastAPI running:")
+    print("• Bound to: http://0.0.0.0:8000  (Docker / network)")
+    print("• Open in browser: http://127.0.0.1:8000")
+    print("• Docs: http://127.0.0.1:8000/docs\n")
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
