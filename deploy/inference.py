@@ -14,15 +14,15 @@ load_dotenv()
 
 app = FastAPI(title="ElectroTech API")
 
+WEEKLY_MODEL = None
 MONTHLY_MODEL = None
 QUARTERLY_MODEL = None
-ANNUAL_MODEL = None
 
 FEATURE_SCHEMA = None
 
 @app.on_event("startup")
 def load_artifacts():
-    global MONTHLY_MODEL, QUARTERLY_MODEL, ANNUAL_MODEL, FEATURE_SCHEMA
+    global WEEKLY_MODEL, MONTHLY_MODEL, QUARTERLY_MODEL, FEATURE_SCHEMA
     
     # Load schema file
     # Try multiple possible paths
@@ -50,10 +50,24 @@ def load_artifacts():
 
     
     # Try loading models from local files first (from .env paths)
+    weekly_model_path = os.getenv("WEEKLY_MODEL_PATH")
     monthly_model_path = os.getenv("MONTHLY_MODEL_PATH")
     quarterly_model_path = os.getenv("QUARTERLY_MODEL_PATH")
-    annual_model_path = os.getenv("ANNUAL_MODEL_PATH")
 
+
+    # Load weekly model
+    if weekly_model_path:
+        weekly_path = Path(weekly_model_path)
+        print(weekly_path)
+        if weekly_path.exists():
+            try:
+                with open(weekly_path, 'rb') as f:
+                    WEEKLY_MODEL = pickle.load(f)
+                print(f"✓ Weekly model loaded from: {weekly_path.absolute()}")
+            except Exception as e:
+                print(f"⚠ Error loading weekly model from {weekly_path}: {str(e)}")
+        else:
+            print(f"⚠ Weekly model path not found: {weekly_path.absolute()}")
 
     # Load monthly model
     if monthly_model_path:
@@ -82,28 +96,23 @@ def load_artifacts():
         else:
             print(f"⚠ Quarterly model path not found: {quarterly_path.absolute()}")
 
-
-    # Load annual model
-    if annual_model_path:
-        annual_path = Path(annual_model_path)
-        if annual_path.exists():
-            try:
-                with open(annual_path, 'rb') as f:
-                    ANNUAL_MODEL = pickle.load(f)
-                print(f"✓ Annual model loaded from: {annual_path.absolute()}")
-            except Exception as e:
-                print(f"⚠ Error loading annual model from {annual_path}: {str(e)}")
-        else:
-            print(f"⚠ Annual model path not found: {annual_path.absolute()}")
-
     
     # If models not loaded from local files, try downloading from Hugging Face
-    if MONTHLY_MODEL is None or QUARTERLY_MODEL is None or ANNUAL_MODEL is None:
+    if WEEKLY_MODEL is None or MONTHLY_MODEL is None or QUARTERLY_MODEL is None:
+        weekly_hf_url = os.getenv("WEEKLY_MODEL_HUGGINGFACE_URL")
         monthly_hf_url = os.getenv("MONTHLY_MODEL_HUGGINGFACE_URL")
         quarterly_hf_url = os.getenv("QUARTERLY_MODEL_HUGGINGFACE_URL")
-        annual_hf_url = os.getenv("ANNUAL_MODEL_HUGGINGFACE_URL")
 
-        
+        if weekly_hf_url and WEEKLY_MODEL is None:
+            try:
+                print(f"Attempting to download weekly model from Hugging Face...")
+                response = requests.get(weekly_hf_url, timeout=60)
+                response.raise_for_status()
+                WEEKLY_MODEL = pickle.load(BytesIO(response.content))
+                print("✓ Weekly model downloaded from Hugging Face")
+            except Exception as e:
+                print(f"⚠ Error downloading weekly model from Hugging Face: {str(e)}")
+
         if monthly_hf_url and MONTHLY_MODEL is None:
             try:
                 print(f"Attempting to download monthly model from Hugging Face...")
@@ -123,24 +132,14 @@ def load_artifacts():
                 print("✓ Quarterly model downloaded from Hugging Face")
             except Exception as e:
                 print(f"⚠ Error downloading quarterly model from Hugging Face: {str(e)}")
-
-        if annual_hf_url and ANNUAL_MODEL is None:
-            try:
-                print(f"Attempting to download annual model from Hugging Face...")
-                response = requests.get(annual_hf_url, timeout=60)
-                response.raise_for_status()
-                ANNUAL_MODEL = pickle.load(BytesIO(response.content))
-                print("✓ Annual model downloaded from Hugging Face")
-            except Exception as e:
-                print(f"⚠ Error downloading annual model from Hugging Face: {str(e)}")
     
     # Final check
+    if WEEKLY_MODEL is None:
+        print("✗ ERROR: Weekly model could not be loaded. Please check your configuration.")
     if MONTHLY_MODEL is None:
         print("✗ ERROR: Monthly model could not be loaded. Please check your configuration.")
     if QUARTERLY_MODEL is None:
         print("✗ ERROR: Quarterly model could not be loaded. Please check your configuration.")
-    if ANNUAL_MODEL is None:
-        print("✗ ERROR: Annual model could not be loaded. Please check your configuration.")
     if FEATURE_SCHEMA is None:
         print("✗ ERROR: Feature schema could not be loaded. Please check your configuration.")
 
@@ -148,7 +147,7 @@ def load_artifacts():
 class PredictRequest(BaseModel):
     steps: int = Field(default=1, ge=1, description="Number of time steps to forecast")
     date: str = Field(default="2025-12-08", description="Start date of predictions in YYYY-MM-DD format")
-    lag: str = Field(default="Y", description="Type of lag to use: 'M' for monthly or 'Q' for quarterly or 'Y' for annually")
+    lag: str = Field(default="W", description="Type of lag to use: 'W' for weekly or 'M' for monthly or 'Q' for quarterly")
     features: Dict[str, Union[int, float]] = Field(
         ..., 
         description="Dictionary of feature names and their values"
@@ -169,9 +168,9 @@ class PredictRequest(BaseModel):
     
     @validator('lag')
     def validate_lag(cls, v):
-        """Validate that lag is either 'M' or 'Q' or 'Y'"""
-        if v not in ['M', 'Q', 'Y']:
-            raise ValueError(f"Invalid lag type: '{v}'. Must be 'M' for monthly or 'Q' for quarterly or 'Y' for annually.")
+        """Validate that lag is either 'W' or'M' or 'Q'"""
+        if v not in ['W', 'M', 'Q']:
+            raise ValueError(f"Invalid lag type: '{v}'. Must be 'M' for monthly or 'Q' for quarterly.")
         return v
 
 
@@ -180,7 +179,7 @@ def predict(request: PredictRequest):
     """Make predictions with automatic feature reindexing"""
     
     # Check if models are loaded
-    if MONTHLY_MODEL is None or QUARTERLY_MODEL is None or ANNUAL_MODEL is None:
+    if WEEKLY_MODEL is None or MONTHLY_MODEL is None or QUARTERLY_MODEL is None:
         raise HTTPException(
             status_code=503, 
             detail="Models not loaded. Please check your configuration and ensure model files are accessible."
@@ -218,16 +217,16 @@ def predict(request: PredictRequest):
 
         exog_df = exog_df.reindex(columns=FEATURE_SCHEMA, fill_value=0)
 
-        if request.lag == "M":
+        if request.lag == "W":
+            model = WEEKLY_MODEL
+        elif request.lag == "M":
             model = MONTHLY_MODEL
         elif request.lag == "Q":
             model = QUARTERLY_MODEL
-        elif request.lag == "Y":
-            model = ANNUAL_MODEL
         else:
             raise HTTPException(
                 status_code=400,
-                detail="Invalid lag type. Please use 'M' for monthly 'Q' for quartely or 'Y' for annually."
+                detail="Invalid lag type. Please use 'W' for weekly or 'M' for monthly 'Q' for quartely."
             )
         forecast = model.forecast(steps=request.steps, exog=exog_df)
 

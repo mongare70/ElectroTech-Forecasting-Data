@@ -64,8 +64,8 @@ st.markdown(
 )
 
 # Tabs
-tab_monthly, tab_quarterly, tab_annually = st.tabs(
-    ["📅 Monthly Forecast", "📆 Quarterly Forecast", "📆 Annual Forecast"]
+tab_weekly, tab_monthly, tab_quarterly = st.tabs(
+    ["📅 Weekly Forecast", "📅 Monthly Forecast", "📆 Quarterly Forecast"]
 )
 
 # Shared Payload builder
@@ -78,10 +78,12 @@ def build_payload(
     confidence_lag,
     trend_lag,
     price_lag,
+    sales_lag,
     competitor_actual,
     confidence_actual,
     trend_actual,
     price_actual,
+    sales_current,
 ):
     return {
         "steps": int(steps),
@@ -97,12 +99,14 @@ def build_payload(
             f"Consumer_Confidence_Index_{lag_suffix}": confidence_lag,
             f"Market_Trend_Index_{lag_suffix}": trend_lag,
             f"Price_{lag_suffix}": price_lag,
+            f"Sales_Volume_{lag_suffix}": sales_lag,
 
             # ✅ Current features
             "Competitor_Activity_Score": competitor_actual,
             "Consumer_Confidence_Index": confidence_actual,
             "Market_Trend_Index": trend_actual,
             "Price": price_actual,
+            "Total_Amount": price_actual * sales_current,
         },
     }
 
@@ -132,6 +136,12 @@ def forecast_form(form_key):
     with c4:
         price_lag = st.number_input(f"Price (£, {lag_option})", 0.0, value=227.0, step=1.0)
 
+    st.markdown("### 📊 Historical Sales Data")
+    sales_lag = st.number_input(f"Sales Volume ({lag_option})", 0, value=100, step=1, key=f"{form_key}_sales_lag")
+    
+    st.markdown("### 📈 Current Sales Data")
+    sales_current = st.number_input("Sales Volume (current)", 0, value=100, step=1, key=f"{form_key}_sales_current")
+
     st.markdown("### 🛏 Current Values")
 
     a1, a2, a3, a4 = st.columns(4)
@@ -146,9 +156,16 @@ def forecast_form(form_key):
 
     return (
         category, season, product,
-        comp_lag, conf_lag, trend_lag, price_lag,
-        comp_actual, conf_actual, trend_actual, price_actual
+        comp_lag, conf_lag, trend_lag, price_lag, sales_lag,
+        comp_actual, conf_actual, trend_actual, price_actual, sales_current
     )
+
+# Weekly
+with tab_weekly:
+    with st.form("weekly_form"):
+        st.markdown("### 📅 Weekly Forecast")
+        data_w = forecast_form("weekly")
+        submitted_weekly = st.form_submit_button("🚀 Run Weekly Forecast")
 
 # Monthly
 with tab_monthly:
@@ -162,24 +179,18 @@ with tab_quarterly:
         data_q = forecast_form("quarterly")
         submitted_quarterly = st.form_submit_button("🚀 Run Quarterly Forecast")
 
-# Annual
-with tab_annually:
-    with st.form("annual_form"):
-        data_a = forecast_form("annual")
-        submitted_annually = st.form_submit_button("🚀 Run Annual Forecast")
-
 # Submission Handler
-if submitted_monthly or submitted_quarterly or submitted_annually:
+if submitted_weekly or submitted_monthly or submitted_quarterly:
 
-    if submitted_monthly:
+    if submitted_weekly:
+        payload = build_payload("W", *data_w)
+        freq = "W"
+    elif submitted_monthly:
         payload = build_payload("M", *data)
         freq = "M"
     elif submitted_quarterly:
         payload = build_payload("Q", *data_q)
         freq = "Q"
-    else:
-        payload = build_payload("Y", *data_a)
-        freq = "Y"
 
     with st.spinner("Generating forecast…"):
         response = requests.post(f"{API_URL}predict", json=payload)
