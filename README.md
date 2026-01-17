@@ -99,16 +99,17 @@ Two complementary modeling strategies were implemented:
 
 ## Model Performance
 
-The table below compares the performance of all trained models using standard regression metrics:
+The table below compares the performance of the trained models using standard regression metrics. Note that the SARIMAX models for Weekly, Monthly, and Quarterly forecasts significantly outperform the Random Forest models for the same timeframes.
 
 | Model | Frequency | MAE | RMSE | R² Score |
 |-------|-----------|-----|------|----------|
-| SARIMAX | Weekly | 14.91 | 19.14 | 0.863 |
-| SARIMAX | Monthly | 0.76 | 1.03 | 0.99 |
-| SARIMAX | Quarterly | 0.76 | 1.03 | 0.99 |
-| SARIMAX | Annual | 0.78 | 1.01 | 0.99 |
-| Random Forest | Weekly (Daily Data) | 1.53 | 1.51 | 0.999 |
-| Random Forest | Monthly (Weeky Resample) | 0.54 | 2.25 | 0.999 |
+| SARIMAX | Weekly | 179.06 | 283.55 |  0.9993 |
+| SARIMAX | Monthly | 327.42 | 421.00 | 0.9999 |
+| SARIMAX | Quarterly | 320.79 | 385.46 | 0.99999 |
+| Random Forest | Weekly | 992.57 | 2546.78 | 0.9248 |
+| Random Forest | Monthly | 2860.11 | 5230.41 | 0.9799 |
+| Random Forest | Quarterly | 6117.53 | 7484.04 | 0.9952 |
+
 
 
 ### Performance Metrics Explained
@@ -119,9 +120,9 @@ The table below compares the performance of all trained models using standard re
 
 ### Key Findings
 
-- The **Random Forest model** achieves exceptional performance (R² = 0.999) on weekly predictions using daily data, demonstrating the power of ensemble methods
-- The **SARIMAX models** provided stronger performance than Random Forest Models with the lower MAE and RMSE since they capture seasonal patterns effectively. Therefore these models wer implemented in the API.
-- Both models successfully leverage external variables (market trends, competitor activity, consumer confidence) to improve forecast accuracy
+- **SARIMAX Superiority**: The SARIMAX models consistently outperform Random Forest across all time frequencies. Notably, for weekly forecasts, SARIMAX achieves a significantly lower MAE (179.06) compared to Random Forest (992.57), indicating superior short-term accuracy.
+- **Aggregation Impact**: Random Forest performance degrades drastically as the aggregation period increases (Quarterly MAE > 6000), whereas SARIMAX maintains consistent accuracy (Quarterly MAE ~320). This suggests Random Forest struggles to capture the underlying seasonal dynamics when data is aggregated over longer periods.
+- **Strategic Choice**: Given the consistently lower error rates (MAE and RMSE) and higher R² scores across all granularities, the **SARIMAX models have been selected for the production API**. They offer the reliability required for both tactical weekly inventory management and strategic quarterly planning.
 
 ---
 
@@ -137,13 +138,12 @@ The project includes a user-friendly Streamlit web application (`deploy/streamli
 - **Input Operational Context**:
   - Product Category (Accessories, Laptop, Smartphone, Tablet)
   - Season (Fall, Spring, Winter, Summer) 
-  - Product Specification (High-Resolution, Lightweight, Long-Battery-Life)
   
-- **Provide Lag Features**: Enter lagged values for market indicators:
-  - Lag reference period (Yesterday, Last week, Last month)
-  - Historical values for Competitor Activity Score, Consumer Confidence Index, Market Trend Index, and Price
+- **Provide Lag Features**: Directly input historical performance indicators:
+  - **Sales Volume Lags**: Enter sales volumes from 1 month (Lag 1), 7 months (Lag 7), and 30 months (Lag 30) prior.
+  - **Price Lags**: Enter product prices from 1, 7, and 30 months prior.
 
-- **Enter Current Values**: Input current operational metrics
+- **Enter Current Values**: Input current Product Price
 - **Visualise Forecasts**: View interactive Plotly charts of predicted sales volumes
 - **Download Results**: Export forecast data as tables
 
