@@ -7,13 +7,6 @@ api = HfApi(token=os.getenv("HF_token"))
 
 try:
     api.upload_file(
-        path_or_fileobj="../model/annual_sarimax_model.pkl",
-        path_in_repo="annual_sarimax_model.pkl",
-        repo_id="mongare70/ElectroTech-Sales-Volume-model",
-        repo_type="model",
-    )
-
-    api.upload_file(
         path_or_fileobj="../model/monthly_sarimax_model.pkl",
         path_in_repo="monthly_sarimax_model.pkl",
         repo_id="mongare70/ElectroTech-Sales-Volume-model",
